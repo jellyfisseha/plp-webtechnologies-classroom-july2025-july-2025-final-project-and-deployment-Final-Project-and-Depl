@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard - OBNESS FLOWERS</title>
+  <link rel="stylesheet" href="css/styles.css">
+
+  <script>
+    // ✅ Protect this page
+    if (localStorage.getItem("admin_logged_in") !== "true") {
+      window.location.href = "admin-login.html";
+    }
+  </script>
+</head>
+<body class="admin-body">
+
+  <header class="admin-header">
+    <h1>🌸 OBNESS FLOWERS - Admin Dashboard 🌸</h1>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </header>
+
+  <main class="admin-main">
+    <h2>📋 Orders</h2>
+    <table id="ordersTable" class="orders-table">
+      <thead>
+        <tr>
+          <th>Customer Name</th>
+          <th>Phone</th>
+          <th>Location</th>
+          <th>Product</th>
+          <th>Quantity</th>
+          <th>Price</th>
+          <th>Notes</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Orders will load here dynamically -->
+      </tbody>
+    </table>
+  </main>
+
+  <script>
+    // ✅ Logout function
+    function logout() {
+      localStorage.removeItem("admin_logged_in");
+      window.location.href = "admin-login.html";
+    }
+
+    // ✅ Load orders from localStorage
+    let orders = JSON.parse(localStorage.getItem("orders")) || [];
+    const ordersTable = document.getElementById("ordersTable").querySelector("tbody");
+
+    function renderOrders() {
+      ordersTable.innerHTML = ""; // clear old rows
+      orders.forEach((order, index) => {
+        const mapsLink = (order.latitude && order.longitude)
+          ? `<a href="https://www.google.com/maps?q=${order.latitude},${order.longitude}" target="_blank">📍 ${order.location}</a>`
+          : `<span>📍 ${order.location}</span>`;
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${order.name}</td>
+          <td><a href="tel:${order.phone}">${order.phone}</a></td>
+          <td>${mapsLink}</td>
+          <td>${order.product}</td>
+          <td>${order.quantity || 1}</td>
+          <td>${order.price} USD</td>
+          <td>${order.notes || "-"}</td>
+          <td>
+            <span class="status ${order.status.toLowerCase()}">${order.status}</span>
+            ${order.status === "Pending" ? 
+              `<button onclick="markDelivered(${index})">Mark as Delivered</button>` 
+              : ""}
+          </td>
+        `;
+        ordersTable.appendChild(row);
+      });
+    }
+
+    function markDelivered(index) {
+      orders[index].status = "Delivered";
+      localStorage.setItem("orders", JSON.stringify(orders));
+      renderOrders();
+    }
+
+    renderOrders(); // ✅ initial load
+  </script>
+</body>
+</html>

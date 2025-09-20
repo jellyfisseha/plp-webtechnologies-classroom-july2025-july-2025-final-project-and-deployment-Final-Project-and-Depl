@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Order — OBNESS FLOWERS</title>
+  <link rel="stylesheet" href="css/styles.css" />
+
+  <!-- Google Places API -->
+  <script>
+  let autocomplete, map, marker;
+
+  function initAutocomplete() {
+    const locationInput = document.getElementById("location");
+
+    autocomplete = new google.maps.places.Autocomplete(locationInput, {
+      types: ['geocode'],
+      componentRestrictions: { country: "ET" } // 🇪🇹 Ethiopia only
+    });
+
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace();
+      if (!place.geometry) return;
+
+      const lat = place.geometry.location.lat();
+      const lng = place.geometry.location.lng();
+
+      if (!map) {
+        map = new google.maps.Map(document.getElementById("mapPreview"), {
+          center: { lat, lng },
+          zoom: 15
+        });
+        marker = new google.maps.Marker({ map, position: { lat, lng } });
+      } else {
+        map.setCenter({ lat, lng });
+        marker.setPosition({ lat, lng });
+      }
+
+      // Save coordinates
+      locationInput.dataset.lat = lat;
+      locationInput.dataset.lng = lng;
+    });
+  }
+  </script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=initAutocomplete" async defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="logo-wrap">
+        <img src="assets/logo.png" alt="Obness Flowers" class="logo">
+        <h1>OBNESS FLOWERS</h1>
+      </div>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="order.html" class="btn">Order Now</a>
+        <a href="admin.html">Admin</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <h2>Place Your Order</h2>
+
+    <form id="orderForm" class="order-card">
+      <!-- Customer Info -->
+      <section class="form-section">
+        <h3>Customer Information</h3>
+        <label>
+          Full Name
+          <input type="text" id="fullname" name="fullname" required>
+        </label>
+        <label>
+          Mobile Number
+          <input type="tel" id="mobile" name="mobile" placeholder="+2519..." required>
+        </label>
+      </section>
+
+      <!-- Delivery Location -->
+      <section class="form-section">
+        <label for="location">Delivery Location</label>
+        <input type="text" id="location" name="location" placeholder="Enter village or location" required>
+        <div id="mapPreview" class="map-frame"></div>
+      </section>
+
+      <!-- Bouquet Selection -->
+      <section class="form-section">
+        <h3>Select Bouquet</h3>
+        <div class="product-options">
+          <label><input type="radio" name="product" value="Rose Bouquet" data-price="15" checked> 🌹 Rose Bouquet — $15</label>
+          <label><input type="radio" name="product" value="Mixed Bouquet" data-price="20"> 💐 Mixed Bouquet — $20</label>
+          <label><input type="radio" name="product" value="Luxury Bouquet" data-price="35"> 🌸 Luxury Bouquet — $35</label>
+        </div>
+        <label>
+          Quantity
+          <input type="number" id="quantity" name="quantity" min="1" value="1" required>
+        </label>
+        <div class="total">Total: <span id="orderTotal">15</span> USD</div>
+      </section>
+
+      <!-- Notes -->
+      <section class="form-section">
+        <h3>Additional Notes</h3>
+        <textarea id="notes" name="notes" rows="3" placeholder="Add delivery instructions..."></textarea>
+      </section>
+
+      <!-- Submit -->
+      <button type="submit" class="btn large">Submit Order</button>
+      <div class="form-message" id="formMessage"></div>
+    </form>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> OBNESS FLOWERS</p>
+  </footer>
+
+<script>
+  // update total on product or quantity change
+  const productOptions = document.querySelectorAll('input[name="product"]');
+  const quantityInput = document.getElementById("quantity");
+  const totalSpan = document.getElementById("orderTotal");
+
+  function updateTotal() {
+    const selectedProduct = document.querySelector('input[name="product"]:checked');
+    const price = parseFloat(selectedProduct.dataset.price);
+    const quantity = parseInt(quantityInput.value);
+    totalSpan.textContent = (price * quantity).toFixed(2);
+  }
+
+  productOptions.forEach(opt => opt.addEventListener("change", updateTotal));
+  quantityInput.addEventListener("input", updateTotal);
+
+  updateTotal();
+
+  // save order
+  document.getElementById("orderForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const locationInput = document.getElementById("location");
+    const selectedProduct = document.querySelector('input[name="product"]:checked');
+    const price = parseFloat(selectedProduct.dataset.price);
+    const quantity = parseInt(document.getElementById("quantity").value);
+    const totalPrice = price * quantity;
+
+    const order = {
+      name: document.getElementById("fullname").value,
+      phone: document.getElementById("mobile").value,
+      location: locationInput.value,
+      latitude: locationInput.dataset.lat || null,
+      longitude: locationInput.dataset.lng || null,
+      product: selectedProduct.value,
+      quantity: quantity,
+      price: totalPrice,
+      notes: document.getElementById("notes").value,
+      status: "Pending"
+    };
+
+    let orders = JSON.parse(localStorage.getItem("orders")) || [];
+    orders.push(order);
+    localStorage.setItem("orders", JSON.stringify(orders));
+
+    alert("✅ Thank you " + order.name + "! Your order has been placed.");
+    this.reset();
+    totalSpan.textContent = "0.00";
+    document.getElementById("mapPreview").innerHTML = "";
+  });
+</script>
+</body>
+</html>

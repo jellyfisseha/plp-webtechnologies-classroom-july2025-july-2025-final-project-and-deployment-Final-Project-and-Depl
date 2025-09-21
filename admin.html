@@ -5,6 +5,17 @@
   <title>Admin Dashboard - OBNESS FLOWERS</title>
   <link rel="stylesheet" href="css/styles.css">
 
+  <!-- Leaflet for optional mini maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    .map-mini {
+      width: 180px;
+      height: 120px;
+      border-radius: 8px;
+      margin-top: 5px;
+    }
+  </style>
+
   <script>
     // ✅ Protect this page
     if (localStorage.getItem("admin_logged_in") !== "true") {
@@ -40,6 +51,9 @@
     </table>
   </main>
 
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
   <script>
     // ✅ Logout function
     function logout() {
@@ -53,9 +67,12 @@
 
     function renderOrders() {
       ordersTable.innerHTML = ""; // clear old rows
+
       orders.forEach((order, index) => {
+        // link for maps
         const mapsLink = (order.latitude && order.longitude)
-          ? `<a href="https://www.google.com/maps?q=${order.latitude},${order.longitude}" target="_blank">📍 ${order.location}</a>`
+          ? `<a href="https://www.google.com/maps?q=${order.latitude},${order.longitude}" target="_blank">📍 ${order.location}</a>
+             <div id="map-${index}" class="map-mini"></div>`
           : `<span>📍 ${order.location}</span>`;
 
         const row = document.createElement("tr");
@@ -75,6 +92,15 @@
           </td>
         `;
         ordersTable.appendChild(row);
+
+        // if coords exist, draw a tiny Leaflet map
+        if (order.latitude && order.longitude) {
+          const map = L.map(`map-${index}`, { attributionControl: false, zoomControl: false })
+            .setView([order.latitude, order.longitude], 14);
+
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+          L.marker([order.latitude, order.longitude]).addTo(map);
+        }
       });
     }
 

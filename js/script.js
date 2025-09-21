@@ -194,26 +194,41 @@ if (orderForm) {
     });
   }
 
-  // small utility: if admin triggered, show console message.
-});
+// small utility: if admin triggered, show console message.
 // GOOGLE MAPS AUTOCOMPLETE (Order Page)
 if (document.getElementById("locationInput")) {
-  let autocomplete = new google.maps.places.Autocomplete(
-    document.getElementById("locationInput"),
-    { types: ["geocode"] }
-  );
+  let locationInput = document.getElementById("locationInput");
+  let autocomplete = new google.maps.places.Autocomplete(locationInput, {
+    types: ["geocode"],
+    componentRestrictions: { country: "ET" } // limit to Ethiopia
+  });
+
   autocomplete.addListener("place_changed", () => {
     const place = autocomplete.getPlace();
+
     if (place.geometry) {
       const lat = place.geometry.location.lat();
       const lng = place.geometry.location.lng();
+
+      // embed map preview
       document.getElementById("mapPreview").innerHTML =
         `<iframe width="100%" height="100%" style="border:0"
           src="https://www.google.com/maps?q=${lat},${lng}&hl=es;z=14&output=embed">
         </iframe>`;
+
+      // save coordinates in dataset
+      locationInput.dataset.lat = lat;
+      locationInput.dataset.lng = lng;
+    } else {
+      // ✅ Fallback: user just typed free text (no geometry found)
+      document.getElementById("mapPreview").innerHTML =
+        `<p style="color:red; font-size:14px;">⚠️ Location not found on map, using text only.</p>`;
+      locationInput.dataset.lat = "";
+      locationInput.dataset.lng = "";
     }
   });
 }
+
 
 // ORDER FORM PRICE CALCULATION
 const orderForm = document.getElementById("orderForm");
